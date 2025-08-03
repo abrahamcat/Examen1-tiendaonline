@@ -3,47 +3,121 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Marca;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class MarcaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // Listar todas las marcas
     public function index()
     {
-        //
+        $marcas = Marca::with('productos')->get();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Marcas obtenidas exitosamente',
+            'data' => $marcas
+        ], 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Crear nueva marca
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255|unique:marcas',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $marca = Marca::create([
+            'nombre' => $request->nombre,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Marca creada exitosamente',
+            'data' => $marca
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    // Mostrar marca específica
+    public function show($id)
     {
-        //
+        $marca = Marca::with('productos')->find($id);
+
+        if (!$marca) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Marca no encontrada'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Marca obtenida exitosamente',
+            'data' => $marca
+        ], 200);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    // Actualizar marca
+    public function update(Request $request, $id)
     {
-        //
+        $marca = Marca::find($id);
+
+        if (!$marca) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Marca no encontrada'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255|unique:marcas,nombre,' . $id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $marca->update([
+            'nombre' => $request->nombre,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Marca actualizada exitosamente',
+            'data' => $marca
+        ], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    // Eliminar marca
+    public function destroy($id)
     {
-        //
+        $marca = Marca::find($id);
+
+        if (!$marca) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Marca no encontrada'
+            ], 404);
+        }
+
+        $marca->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Marca eliminada exitosamente'
+        ], 200);
     }
 }
