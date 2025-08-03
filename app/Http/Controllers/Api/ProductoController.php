@@ -1,40 +1,138 @@
 <?php
 
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Producto;
+use App\Models\Marca;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\MarcaController;
-use App\Http\Controllers\Api\ProductoController;
+use Illuminate\Support\Facades\Validator;
 
-// Rutas públicas de autenticación
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
-
-// Rutas protegidas (requieren autenticación)
-Route::middleware('auth:sanctum')->group(function () {
-    
-    // Logout
-    Route::post('/logout', [AuthController::class, 'logout']);
-    
-    // Rutas para Marcas
-    Route::apiResource('/marcas', MarcaController::class);
-    
-    // Rutas para Productos
-    Route::apiResource('/productos', ProductoController::class);
-    
-    // Ruta para obtener información del usuario autenticado
-    Route::get('/user', function (Request $request) {
+class ProductoController extends Controller
+{
+    // Listar todos los productos
+    public function index()
+    {
+        $productos = Producto::with('marca')->get();
+        
         return response()->json([
             'success' => true,
-            'user' => $request->user()
-        ]);
-    });
-});
+            'message' => 'Productos obtenidos exitosamente',
+            'data' => $productos
+        ], 200);
+    }
 
-// Ruta de fallback para rutas no encontradas
-Route::fallback(function(){
-    return response()->json([
-        'success' => false,
-        'message' => 'Ruta no encontrada'
-    ], 404);
-});
+    // Crear nuevo producto
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255',
+            'precio' => 'required|numeric|min:0',
+            'marca_id' => 'required|exists:marcas,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $producto = Producto::create([
+            'nombre' => $request->nombre,
+            'precio' => $request->precio,
+            'marca_id' => $request->marca_id,
+        ]);
+
+        // Cargar la relación con la marca
+        $producto->load('marca');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto creado exitosamente',
+            'data' => $producto
+        ], 201);
+    }
+
+    // Mostrar producto específico
+    public function show($id)
+    {
+        $producto = Producto::with('marca')->find($id);
+
+        if (!$producto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto obtenido exitosamente',
+            'data' => $producto
+        ], 200);
+    }
+
+    // Actualizar producto
+    public function update(Request $request, $id)
+    {
+        $producto = Producto::find($id);
+
+        if (!$producto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'nombre' => 'required|string|max:255',
+            'precio' => 'required|numeric|min:0',
+            'marca_id' => 'required|exists:marcas,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $producto->update([
+            'nombre' => $request->nombre,
+            'precio' => $request->precio,
+            'marca_id' => $request->marca_id,
+        ]);
+
+        // Cargar la relación con la marca
+        $producto->load('marca');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto actualizado exitosamente',
+            'data' => $producto
+        ], 200);
+    }
+
+    // Eliminar producto
+    public function destroy($id)
+    {
+        $producto = Producto::find($id);
+
+        if (!$producto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Producto no encontrado'
+            ], 404);
+        }
+
+        $producto->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto eliminado exitosamente'
+        ], 200);
+    }
+}
