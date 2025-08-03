@@ -1,49 +1,40 @@
 <?php
 
-namespace App\Http\Controllers\Api;
-
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MarcaController;
+use App\Http\Controllers\Api\ProductoController;
 
-class ProductoController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
+// Rutas públicas de autenticación
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+// Rutas protegidas (requieren autenticación)
+Route::middleware('auth:sanctum')->group(function () {
+    
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Rutas para Marcas
+    Route::apiResource('/marcas', MarcaController::class);
+    
+    // Rutas para Productos
+    Route::apiResource('/productos', ProductoController::class);
+    
+    // Ruta para obtener información del usuario autenticado
+    Route::get('/user', function (Request $request) {
+        return response()->json([
+            'success' => true,
+            'user' => $request->user()
+        ]);
+    });
+});
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-}
+// Ruta de fallback para rutas no encontradas
+Route::fallback(function(){
+    return response()->json([
+        'success' => false,
+        'message' => 'Ruta no encontrada'
+    ], 404);
+});
