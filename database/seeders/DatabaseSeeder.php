@@ -2,22 +2,22 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Marca;
 
-class DatabaseSeeder extends Seeder
+class MarcaSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
-    public function run(): void
+    public function run()
     {
-        // User::factory(10)->create();
+        $marcas = [
+            ['nombre' => 'Apple'],
+            ['nombre' => 'Samsung'],
+            ['nombre' => 'Xiaomi'],
+            ['nombre' => 'Sony']
+        ];
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        foreach ($marcas as $marca) {
+            Marca::create($marca);
+        }
     }
 }
