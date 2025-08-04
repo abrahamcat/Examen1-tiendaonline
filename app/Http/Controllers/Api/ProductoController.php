@@ -13,13 +13,14 @@ class ProductoController extends Controller
     // Listar todos los productos
     public function index()
     {
-        $productos = Producto::with('marca')->get();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Productos obtenidos exitosamente',
-            'data' => $productos
-        ], 200);
+    $productos = Producto::with('marca:id,nombre')->orderBy('created_at', 'desc')->get();
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Productos obtenidos exitosamente',
+        'data' => $productos,
+        'total' => $productos->count()
+    ], 200);
     }
 
     // Crear nuevo producto
