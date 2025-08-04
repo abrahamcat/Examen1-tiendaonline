@@ -25,7 +25,10 @@ class MarcaController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:255|unique:marcas',
+        'nombre' => 'required|string|max:255|unique:marcas|min:2',], [
+        'nombre.required' => 'El nombre de la marca es obligatorio',
+        'nombre.min' => 'El nombre debe tener al menos 2 caracteres',
+        'nombre.unique' => 'Ya existe una marca con este nombre'
         ]);
 
         if ($validator->fails()) {
